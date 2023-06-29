@@ -1,0 +1,135 @@
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class MazeSolver {
+    private char[][] maze;
+    private int[][] directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+    private int rows;
+    private int cols;
+
+    public MazeSolver(char[][] maze) {
+        this.maze = maze;
+        this.rows = maze.length;
+        this.cols = maze[0].length;
+    }
+
+    public List<int[]> solveMaze() {
+        int startRow = -1;
+        int startCol = -1;
+
+        // Find the starting position in the maze
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                if (maze[row][col] == 'S') {
+                    startRow = row;
+                    startCol = col;
+                    break;
+                }
+            }
+        }
+
+        // If the starting position is not found, the maze is unsolvable
+        if (startRow == -1 || startCol == -1) {
+            return null;
+        }
+
+        List<int[]> path = new ArrayList<>();
+        boolean[][] visited = new boolean[rows][cols];
+
+        // Call the recursive backtrack function to find the solution
+        backtrack(startRow, startCol, visited, path);
+
+        // If the path is empty, it means there is no solution
+        if (path.isEmpty()) {
+            return null;
+        }
+
+        return path;
+    }
+
+    private void backtrack(int row, int col, boolean[][] visited, List<int[]> path) {
+        // If the current position is out of bounds or a wall, return
+        if (row < 0 || col < 0 || row >= rows || col >= cols || maze[row][col] == 'X' || visited[row][col]) {
+            return;
+        }
+
+        // If the current position is the end of the maze, add it to the path and return
+        if (maze[row][col] == 'E') {
+            path.add(new int[]{row, col});
+            return;
+        }
+
+        // Mark the current position as visited
+        visited[row][col] = true;
+
+        // Try all possible directions
+        for (int[] dir : directions) {
+            int newRow = row + dir[0];
+            int newCol = col + dir[1];
+            backtrack(newRow, newCol, visited, path);
+
+            // If a path to the end is found, add the current position to the path and return
+            if (!path.isEmpty()) {
+                path.add(new int[]{row, col});
+                return;
+            }
+        }
+    }
+
+    public static char[][] generateRandomMaze(int length, int width) {
+        Random random = new Random();
+        char[][] maze = new char[length][width];
+
+        for (int row = 0; row < length; row++) {
+            for (int col = 0; col < width; col++) {
+                // Set walls randomly with a 1/4 chance
+                if (random.nextInt(4) == 0) {
+                    maze[row][col] = 'X';
+                } else {
+                    maze[row][col] = ' ';
+                }
+            }
+        }
+
+        // Set the start and end positions randomly
+        int startRow = random.nextInt(length);
+        int startCol = random.nextInt(width);
+        int endRow = random.nextInt(length);
+        int endCol = random.nextInt(width);
+
+        maze[startRow][startCol] = 'S';
+        maze[endRow][endCol] = 'E';
+
+        return maze;
+    }
+
+    public static void main(String[] args) {
+        for (int i = 0; i < 100; i++) {
+            char[][] maze = generateRandomMaze(5 + new Random().nextInt(6), 5 + new Random().nextInt(6));
+            MazeSolver mazeSolver = new MazeSolver(maze);
+            List<int[]> solutionPath = mazeSolver.solveMaze();
+
+            if (solutionPath != null) {
+                System.out.println("Solvable Maze:");
+                printMaze(maze);
+                System.out.println("Shortest path length: " + (solutionPath.size() - 1));
+            } else {
+                System.out.println("Unsolvable Maze:");
+                printMaze(maze);
+            }
+
+            System.out.println("----------------------------");
+        }
+    }
+
+    private static void printMaze(char[][] maze) {
+        for (char[] row : maze) {
+            for (char cell : row) {
+                System.out.print(cell + " ");
+            }
+            System.out.println();
+        }
+    }
+}
